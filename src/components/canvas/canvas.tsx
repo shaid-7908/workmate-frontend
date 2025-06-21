@@ -77,7 +77,7 @@ const Canvas = () => {
   }, [canvasRef]);
 
   return (
-    <div ref={containerRef} className="flex-1 bg-zinc-900">
+    <div ref={containerRef} className="flex-1 bg-gray-900">
       <canvas ref={canvasElRef} />
     </div>
   );

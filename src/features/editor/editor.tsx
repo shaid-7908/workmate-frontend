@@ -81,7 +81,7 @@ const Editor = () => {
   }, [timeline]);
 
   return (
-    <div className="flex h-screen w-screen flex-col">
+    <div className="flex h-screen w-screen flex-col ">
       <Navbar
         projectName={projectName}
         user={null}
@@ -93,7 +93,7 @@ const Editor = () => {
           <ResizablePanel className="relative" defaultSize={70}>
             <FloatingControl />
             <div className="flex h-full flex-1">
-              <div className="bg-sidebar flex flex-none border-r border-border/80">
+              <div className=" flex flex-none border-r border-border/80">
                 <MenuList />
                 <MenuItem />
               </div>

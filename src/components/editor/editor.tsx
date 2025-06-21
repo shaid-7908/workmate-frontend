@@ -23,9 +23,9 @@ const ImageEditor = () => {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="flex h-screen w-screen flex-col">
       <Navbar />
-      <div className="flex-1 relative overflow-hidden flex">
+      <div className="relative flex flex-1 overflow-hidden">
         <MenuList />
         <MenuItem />
         <ControlList />
