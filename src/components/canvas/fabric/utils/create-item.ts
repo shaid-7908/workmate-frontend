@@ -3,6 +3,8 @@ import { IImage, ILayer } from "@/interfaces/editor";
 import { EventBusData } from "@/interfaces/rxjs";
 import { loadFonts } from "@/utils/fonts";
 import { FabricImage, ITextProps, Textbox } from "fabric";
+import { nanoid } from "nanoid";
+
 
 export const createItem = async (event: EventBusData) => {
   if (event.key === ADD_TEXT) {
@@ -16,6 +18,7 @@ export const createItem = async (event: EventBusData) => {
     const { text, ...options } = layer.details;
 
     const textbox = new Textbox(text, options as ITextProps);
+    textbox.set({id:nanoid()})
     return textbox;
   }
 
@@ -25,6 +28,7 @@ export const createItem = async (event: EventBusData) => {
     image.set({
       scaleX: 0.1,
       scaleY: 0.1,
+      id:nanoid()
     });
     return image;
   }

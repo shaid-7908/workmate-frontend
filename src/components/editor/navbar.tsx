@@ -72,7 +72,7 @@ export default function Navbar() {
           <Button
             className="border border-white/10 flex gap-2"
             onClick={() => openLink("https://discord.gg/jrZs3wZyM5")}
-            size="xs"
+            size="sm"
             variant="secondary"
           >
             <svg
@@ -116,8 +116,8 @@ const RESIZE_OPTIONS: ResizeOptionProps[] = [
     label: "16:9",
     icon: "landscape",
     value: {
-      width: 1920,
-      height: 1080,
+      width: 1067, // (600 * 16) / 9 = 1066.67 ≈ 1067
+      height: 600,
       name: "16:9",
     },
   },
@@ -125,8 +125,8 @@ const RESIZE_OPTIONS: ResizeOptionProps[] = [
     label: "9:16",
     icon: "portrait",
     value: {
-      width: 1080,
-      height: 1920,
+      width: 600,
+      height: 1067, // (600 * 16) / 9 = 1066.67 ≈ 1067
       name: "9:16",
     },
   },
@@ -134,12 +134,13 @@ const RESIZE_OPTIONS: ResizeOptionProps[] = [
     label: "1:1",
     icon: "square",
     value: {
-      width: 1080,
-      height: 1080,
+      width: 600,
+      height: 600,
       name: "1:1",
     },
   },
 ];
+
 
 const ResizeVideo = () => {
   const handleResize = (payload: ResizeValue) => {
@@ -152,7 +153,7 @@ const ResizeVideo = () => {
       <PopoverTrigger asChild>
         <Button
           className="border border-white/10"
-          size="xs"
+          size="lg"
           variant="secondary"
         >
           Resize

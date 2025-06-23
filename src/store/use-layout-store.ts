@@ -7,6 +7,11 @@ const useLayoutStore = create<ILayoutState>((set) => ({
   showControlItem: false,
   showToolboxItem: false,
   activeToolboxItem: null,
+  artBoardSize: {
+    width: 600,
+    height: 600,
+  },
+  setArtboardSize: (size) => set({ artBoardSize: size }),
   setActiveMenuItem: (showMenu) => set({ activeMenuItem: showMenu }),
   setShowMenuItem: (showMenuItem) => set({ showMenuItem }),
   setShowControlItem: (showControlItem) => set({ showControlItem }),

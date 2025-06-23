@@ -29,6 +29,8 @@ const stateManager = new StateManager({
   },
 });
 
+console.log(stateManager,'bro')
+
 const Editor = () => {
   const [projectName, setProjectName] = useState<string>("Untitled video");
   const timelinePanelRef = useRef<ImperativePanelHandle>(null);

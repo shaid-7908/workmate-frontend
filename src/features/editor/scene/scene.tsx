@@ -31,7 +31,7 @@ export default function Scene({
       {trackItemIds.length === 0 && <SceneEmpty />}
       <Viewer
         ref={viewerRef}
-        className="player-container bg-sidebar"
+        className="player-container"
         displayHorizontalScroll={false}
         displayVerticalScroll={false}
         zoom={zoom}

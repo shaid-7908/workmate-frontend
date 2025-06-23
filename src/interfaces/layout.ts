@@ -13,6 +13,11 @@ export interface ILayoutState {
   showControlItem: boolean;
   showToolboxItem: boolean;
   activeToolboxItem: string | null;
+  artBoardSize: {
+    width: number;
+    height: number;
+  };
+  setArtboardSize: (size: { width: number; height: number }) => void;
   setActiveMenuItem: (showMenu: IMenuItem | null) => void;
   setShowMenuItem: (showMenuItem: boolean) => void;
   setShowControlItem: (showControlItem: boolean) => void;
