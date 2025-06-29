@@ -171,8 +171,13 @@ export default class FabricCanvas extends Canvas {
       }
       
       // Restore canvas properties
-      if (state.viewportTransform) {
+      if (state.viewportTransform && state.objects && state.objects.length > 0) {
         this.setViewportTransform(state.viewportTransform);
+      } else {
+        // If no objects to restore, keep the current viewport transform to preserve artboard position
+        console.log('No objects to restore, preserving current viewport transform');
+        // Ensure artboard is centered
+        this.centerArtboards();
       }
       if (state.zoom) {
         this.setZoom(state.zoom);
