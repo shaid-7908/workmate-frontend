@@ -181,7 +181,23 @@ const BasicText = ({ item }: { item: ILayer }) => {
                 handleChangeFontStyle={handleChangeFontStyle}
               />
               <div className="relative">
-                <Input className="h-9" defaultValue={88} />
+                <Input
+                  className="h-9"
+                  type="number"
+                  min={1}
+                  value={properties.fontSize}
+                  onChange={e => {
+                    const newSize = Number(e.target.value);
+                    setProperties({ ...properties, fontSize: newSize, fontSizeDisplay: newSize + 'px' });
+                    dispatcher.dispatch(EDIT_OBJECT, {
+                      payload: {
+                        details: {
+                          fontSize: newSize,
+                        },
+                      },
+                    });
+                  }}
+                />
                 <div className="absolute top-1/2 transform -translate-y-1/2 right-2.5 text-sm text-zinc-200">
                   px
                 </div>
