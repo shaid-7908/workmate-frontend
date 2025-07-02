@@ -49,7 +49,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
     fontFamilyDisplay: "Open Sans",
     opacity: 1,
     opacityDisplay: "100%",
-    textAlign: "left",
+    textAlign: "none",
     textDecoration: "none",
   });
 
@@ -60,6 +60,9 @@ const BasicText = ({ item }: { item: ILayer }) => {
     name: "Regular",
   });
   const { compactFonts, fonts } = useDataState();
+
+  // Add alignment state
+  const [alignment, setAlignment] = useState("left");
 
   useEffect(() => {
     const fontFamily = item.details.fontFamily || DEFAULT_FONT.postScriptName;
@@ -94,6 +97,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
       textAlign: item.details.textAlign || "left",
       textDecoration: item.details.textDecoration || "none",
     });
+    setAlignment(item.details.textAlign || "left");
   }, [item.id]);
 
   const handleChangeFont = async (font: ICompactFont) => {
@@ -144,6 +148,19 @@ const BasicText = ({ item }: { item: ILayer }) => {
     });
   };
 
+  // Handler for alignment change
+  const handleAlignmentChange = (value: string) => {
+    setAlignment(value);
+    setProperties({ ...properties, textAlign: value });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          textAlign: value,
+        },
+      },
+    });
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="text-md text-text-primary font-medium h-12  flex items-center px-4 flex-none">
@@ -172,7 +189,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Alignment />
+            <Alignment value={alignment} onChange={handleAlignmentChange} />
             <TextDecoration />
           </div>
         </div>
@@ -289,9 +306,10 @@ const FontFamily = ({
   fontFamilyDisplay: string;
 }) => {
   const { compactFonts } = useDataState();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           size="sm"
@@ -308,7 +326,10 @@ const FontFamily = ({
         <ScrollArea className="h-[400px] w-full py-2">
           {compactFonts.map((font, index) => (
             <div
-              onClick={() => handleChangeFont(font)}
+              onClick={() => {
+                handleChangeFont(font);
+                setOpen(false);
+              }}
               className="hover:bg-zinc-800/50 cursor-pointer px-2 py-1"
               key={index}
             >
@@ -334,8 +355,9 @@ const FontStyle = ({
   selectedFont: ICompactFont;
   handleChangeFontStyle: (font: IFont) => void;
 }) => {
+  const [open, setOpen] = useState(false);
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           size="sm"
@@ -359,7 +381,10 @@ const FontStyle = ({
             <div
               className="text-sm h-6 hover:bg-zinc-800 flex items-center px-2 py-3.5 cursor-pointer text-zinc-300 hover:text-zinc-100"
               key={index}
-              onClick={() => handleChangeFontStyle(style)}
+              onClick={() => {
+                handleChangeFontStyle(style);
+                setOpen(false);
+              }}
             >
               {styleName}
             </div>
@@ -409,26 +434,22 @@ const TextDecoration = () => {
   );
 };
 
-const Alignment = () => {
-  const [value, setValue] = useState("left");
-  const onChangeAligment = (value: string) => {
-    setValue(value);
-  };
+const Alignment = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   return (
     <ToggleGroup
       value={value}
       size="sm"
       className="grid grid-cols-3"
       type="single"
-      onValueChange={onChangeAligment}
+      onValueChange={onChange}
     >
       <ToggleGroupItem size="sm" value="left" aria-label="Toggle left">
         <AlignLeft size={18} />
       </ToggleGroupItem>
-      <ToggleGroupItem value="italic" aria-label="Toggle italic">
+      <ToggleGroupItem value="center" aria-label="Toggle center">
         <AlignCenter size={18} />
       </ToggleGroupItem>
-      <ToggleGroupItem value="strikethrough" aria-label="Toggle strikethrough">
+      <ToggleGroupItem value="right" aria-label="Toggle right">
         <AlignRight size={18} />
       </ToggleGroupItem>
     </ToggleGroup>

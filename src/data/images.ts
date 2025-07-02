@@ -1,7 +1,7 @@
 export const IMAGES = [
   {
     id: 1,
-    src: 'https://res.cloudinary.com/drj5rmp5l/image/upload/v1722562726/pexels-asadphoto-1450361_h9mb2r.jpg',
+    src: 'https://res.cloudinary.com/dycvkezau/image/upload/v1731564880/blog-1-p2_zxrm46.png',
   },
   {
     id: 2,

@@ -74,6 +74,32 @@ const Canvas = () => {
     }
   };
 
+    useEffect(() => {
+    const editEvents = dispatcher.bus.pipe(
+      filter(({ key }) => key.startsWith('edit:'))
+    );
+    const subscription = editEvents.subscribe(({ val }) => {
+      // Find the selected object on the canvas
+      // Apply val.payload.details to it
+      // Request canvas re-render
+      console.log(val,'edit event')
+      const canvas = canvasRef.current;
+      const selection = canvas?.getActiveObject();
+      if(selection){
+        const details = val.payload.details;
+        const {fontFamily,fontUrl} = details;
+        selection.set({
+          fontFamily,
+          fontUrl
+        })
+        canvas?.requestRenderAll();
+        console.log(selection,'selection object from main canvas')
+      }
+
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   // ✅ Listen for ADD_* events
   useEffect(() => {
     const stateEvents = dispatcher.bus.pipe(

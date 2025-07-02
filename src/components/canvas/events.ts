@@ -25,7 +25,7 @@ function onObjectMoving(this: FabricCanvas, e: FabricMovingEvent) {}
 function onSelectionCreated(this: FabricCanvas) {
   const objects = this.getActiveObjects();
   const selection = this.getActiveObject();
-
+  console.log(selection,'selection object')
   const layers = getObjectsDetail(objects);
 
   if (objects.length > 1 && selection instanceof ActiveSelection) {
