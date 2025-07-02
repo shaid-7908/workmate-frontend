@@ -12,6 +12,19 @@ export default class FabricCanvas extends Canvas {
   constructor(canvasEl: HTMLCanvasElement, options?: any) {
     super(canvasEl, options);
     this.initializeUndoRedo();
+
+    this.on('object:scaling', (e) => {
+      const obj = e.target;
+      if (obj && obj.type === 'textbox') {
+        // Only allow width resize, not font scaling
+        obj.set({
+          width: obj.width * obj.scaleX,
+          scaleX: 1,
+          scaleY: 1,
+        });
+        this.requestRenderAll();
+      }
+    });
   }
 
   private initializeUndoRedo() {
@@ -141,7 +154,9 @@ export default class FabricCanvas extends Canvas {
               const textbox = new (fabric as any).Textbox(textboxData.text || '', {
                 ...textboxData,
                 left: textboxData.left || 0,
-                top: textboxData.top || 0
+                top: textboxData.top || 0,
+                lockScalingY: true,
+                lockUniScaling: false,
               });
               this.add(textbox);
               console.log('Added textbox:', textboxData.text);
