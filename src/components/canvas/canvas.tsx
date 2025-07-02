@@ -169,6 +169,26 @@ const Canvas = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const activeObject = canvas.getActiveObject();
+          if (activeObject && activeObject.type !== 'Artboard') {
+            canvas.remove(activeObject);
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
   
   return (
     <div ref={containerRef} className="flex-1 bg-gray-900">
