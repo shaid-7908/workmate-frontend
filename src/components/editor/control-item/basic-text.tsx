@@ -22,6 +22,8 @@ import ColorPicker from "@/components/color-picker";
 interface ITextControlProps {
   color: string;
   colorDisplay: string;
+  strokeColor: string;
+  strokeColorDisplay: string;
   fontSize: number;
   fontSizeDisplay: string;
   fontFamily: string;
@@ -44,6 +46,8 @@ const BasicText = ({ item }: { item: ILayer }) => {
   const [properties, setProperties] = useState<ITextControlProps>({
     color: "#000000",
     colorDisplay: "#000000",
+    strokeColor: "#000000",
+    strokeColorDisplay: "#000000",
     fontSize: 12,
     fontSizeDisplay: "12px",
     fontFamily: "Open Sans",
@@ -89,6 +93,8 @@ const BasicText = ({ item }: { item: ILayer }) => {
     setProperties({
       color: item.details.color || "#ffffff",
       colorDisplay: item.details.color || "#ffffff",
+      strokeColor: item.details.strokeColor || "#000000",
+      strokeColorDisplay: item.details.strokeColor || "#000000",
       fontSize: item.details.fontSize || 62,
       fontSizeDisplay: (item.details.fontSize || 62) + "px",
       fontFamily: selectedFont?.family || "Open Sans",
@@ -108,6 +114,18 @@ const BasicText = ({ item }: { item: ILayer }) => {
       payload: {
         details: {
           color: color,
+        },
+      },
+    });
+  };
+
+  // Handler for stroke color change
+  const handleChangeStrokeColor = (strokeColor: string) => {
+    setProperties({ ...properties, strokeColor, strokeColorDisplay: strokeColor });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          strokeColor: strokeColor,
         },
       },
     });
@@ -225,7 +243,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
         <div className="p-4 flex flex-col gap-2">
           <div className="text-sm">Style</div>
           <Fill color={properties.color} onColorChange={handleChangeColor} />
-          <Stroke />
+          <Stroke strokeColor={properties.strokeColor} onStrokeColorChange={handleChangeStrokeColor} />
           <Shadow />
           <Background />
         </div>
@@ -280,7 +298,7 @@ const Fill = ({ color, onColorChange }: { color: string; onColorChange: (color: 
   );
 };
 
-const Stroke = () => {
+const Stroke = ({ strokeColor, onStrokeColorChange }: { strokeColor: string; onStrokeColorChange: (strokeColor: string) => void }) => {
   return (
     <div
       style={{
@@ -289,9 +307,26 @@ const Stroke = () => {
         gap: "4px",
       }}
     >
-      <div className="text-sm text-zinc-500  flex items-center">Stroke</div>
+      <div className="text-sm text-zinc-500 flex items-center">Stroke</div>
       <div>
-        <div className="w-6 h-6 rounded-sm border-2 border-zinc-800 bg-green-700"></div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <div 
+              className="w-6 h-6 rounded-sm border-2 border-zinc-800 cursor-pointer"
+              style={{ backgroundColor: strokeColor }}
+            />
+          </PopoverTrigger>
+          <PopoverContent className="z-[300] md:w-[300px] p-3 mr-4">
+            <ColorPicker
+              value={strokeColor}
+              format="hex"
+              gradient={false}
+              solid={true}
+              onChange={onStrokeColorChange}
+              allowAddGradientStops={false}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       <div>
         <Button size="icon" variant="ghost" className="h-6 w-6">
