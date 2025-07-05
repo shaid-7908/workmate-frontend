@@ -17,6 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AlignCenter, AlignLeft, AlignRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Transform from "./common/transform";
+import ColorPicker from "@/components/color-picker";
 
 interface ITextControlProps {
   color: string;
@@ -99,6 +100,18 @@ const BasicText = ({ item }: { item: ILayer }) => {
     });
     setAlignment(item.details.textAlign || "left");
   }, [item.id]);
+
+  // Handler for color change
+  const handleChangeColor = (color: string) => {
+    setProperties({ ...properties, color, colorDisplay: color });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          color: color,
+        },
+      },
+    });
+  };
 
   const handleChangeFont = async (font: ICompactFont) => {
     const fontName = font.default.postScriptName;
@@ -211,7 +224,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
         </div>
         <div className="p-4 flex flex-col gap-2">
           <div className="text-sm">Style</div>
-          <Fill />
+          <Fill color={properties.color} onColorChange={handleChangeColor} />
           <Stroke />
           <Shadow />
           <Background />
@@ -228,7 +241,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
   );
 };
 
-const Fill = () => {
+const Fill = ({ color, onColorChange }: { color: string; onColorChange: (color: string) => void }) => {
   return (
     <div
       style={{
@@ -237,9 +250,26 @@ const Fill = () => {
         gap: "4px",
       }}
     >
-      <div className="text-sm text-zinc-500  flex items-center">Fill</div>
-      <div>
-        <div className="w-6 h-6 rounded-sm border-2 border-zinc-800 bg-green-700"></div>
+      <div className="text-sm text-zinc-500 flex items-center">Fill</div>
+      <div className="">
+        <Popover>
+          <PopoverTrigger asChild>
+            <div 
+              className="w-6 h-6 rounded-sm border-2 border-zinc-800 cursor-pointer"
+              style={{ backgroundColor: color }}
+            />
+          </PopoverTrigger>
+          <PopoverContent className="z-[300] md:w-[300px] p-3 mr-4">
+            <ColorPicker
+              value={color}
+              format="hex"
+              gradient={false}
+              solid={true}
+              onChange={onColorChange}
+              allowAddGradientStops={false}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       <div>
         <Button size="icon" variant="ghost" className="h-6 w-6">

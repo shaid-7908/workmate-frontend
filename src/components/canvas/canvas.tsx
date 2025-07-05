@@ -87,12 +87,13 @@ const Canvas = () => {
       const selection = canvas?.getActiveObject();
       if(selection){
         const details = val.payload.details;
-        const {fontFamily, fontUrl, textAlign, fontSize} = details;
+        const {fontFamily, fontUrl, textAlign, fontSize, color} = details;
         selection.set({
           ...(fontFamily && { fontFamily }),
           ...(fontUrl && { fontUrl }),
           ...(textAlign && { textAlign }),
-          ...(fontSize && { fontSize })
+          ...(fontSize && { fontSize }),
+          ...(color && { fill: color })
         });
         canvas?.requestRenderAll();
         console.log(selection,'selection object from main canvas')
