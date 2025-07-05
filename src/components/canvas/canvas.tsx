@@ -5,7 +5,7 @@ import { ADD_PREFIX, DESIGN_RESIZE, HISTORY_UNDO, HISTORY_REDO, dispatcher, filt
 import { addEventListeners, removeEventListeners } from "./events";
 import { createItem } from "./fabric/utils/create-item";
 import { EventBusData } from "@/interfaces/rxjs";
-import { FabricObject } from "fabric";
+import { FabricObject, Shadow } from "fabric";
 import { useUndoRedo } from "./hooks/use-undo-redo";
 
 const Canvas = () => {
@@ -82,22 +82,125 @@ const Canvas = () => {
       // Find the selected object on the canvas
       // Apply val.payload.details to it
       // Request canvas re-render
-      console.log(val,'edit event')
+      console.log('Edit event received:', val);
       const canvas = canvasRef.current;
       const selection = canvas?.getActiveObject();
+      console.log(selection,'selection object from main canvas')
       if(selection){
         const details = val.payload.details;
-        const {fontFamily, fontUrl, textAlign, fontSize, color, strokeColor} = details;
-        selection.set({
+        console.log('Edit details:', details);
+        const {fontFamily, fontUrl, textAlign, fontSize, color, strokeColor, shadowColor, shadowX, shadowY, shadowBlur} = details;
+        
+        // Handle shadow properties
+        let shadow = null;
+        let shouldRemoveShadow = false;
+        
+        // Check if we have any meaningful shadow values (non-zero or color)
+        const hasShadowColor = shadowColor && shadowColor !== '#000000';
+        const hasShadowOffset = (shadowX !== undefined && shadowX !== 0) || (shadowY !== undefined && shadowY !== 0);
+        const hasShadowBlur = shadowBlur !== undefined && shadowBlur !== 0;
+        const hasShadowValues = hasShadowOffset || hasShadowBlur; // Remove hasShadowColor from this check since we always have a color
+        
+        console.log('Shadow detection:', {
+          hasShadowColor,
+          hasShadowOffset,
+          hasShadowBlur,
+          hasShadowValues
+        });
+        
+        // Check if we're explicitly setting all values to zero (indicating shadow removal)
+        const isExplicitZero = (shadowX === 0 && shadowY === 0 && shadowBlur === 0) || 
+                              (shadowX === 0 && shadowY === 0 && shadowBlur === 0 && shadowColor === '#000000');
+        
+        console.log('Shadow values:', { 
+          shadowColor, 
+          shadowX, 
+          shadowY, 
+          shadowBlur, 
+          hasShadowColor,
+          hasShadowOffset,
+          hasShadowBlur,
+          hasShadowValues,
+          isExplicitZero
+        });
+        
+        if (hasShadowValues) {
+          try {
+            // Convert hex color to rgba for Fabric.js shadow
+            let shadowColorRgba = 'rgba(0,0,0,0.3)';
+            if (shadowColor) {
+              try {
+                // Convert hex to rgba
+                const hex = shadowColor.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+                shadowColorRgba = `rgba(${r},${g},${b},0.3)`;
+                console.log('Converted shadow color:', shadowColorRgba);
+              } catch (error) {
+                console.error('Error converting shadow color:', error);
+                shadowColorRgba = 'rgba(0,0,0,0.3)';
+              }
+            }
+            
+            // Ensure all values are valid numbers
+            const blur = typeof shadowBlur === 'number' ? shadowBlur : 0;
+            const offsetX = typeof shadowX === 'number' ? shadowX : 0;
+            const offsetY = typeof shadowY === 'number' ? shadowY : 0;
+            
+            shadow = new Shadow({
+              color: shadowColorRgba,
+              blur: blur,
+              offsetX: offsetX,
+              offsetY: offsetY,
+              affectStroke: false,
+              nonScaling: false
+            });
+            console.log('Created shadow object:', shadow);
+          } catch (error) {
+            console.error('Error creating shadow object:', error);
+            shadow = null;
+          }
+        } else if (isExplicitZero) {
+          // Explicitly remove shadow when all values are set to zero
+          shouldRemoveShadow = true;
+          console.log('Explicitly removing shadow - all values set to zero');
+        }
+        // If no shadow values and not explicit zero, don't touch shadow
+        
+        const updateData: any = {
           ...(fontFamily && { fontFamily }),
           ...(fontUrl && { fontUrl }),
           ...(textAlign && { textAlign }),
           ...(fontSize && { fontSize }),
           ...(color && { fill: color }),
-          ...(strokeColor && { stroke: strokeColor })
-        });
-        canvas?.requestRenderAll();
-        console.log(selection,'selection object from main canvas')
+          ...(strokeColor && { stroke: strokeColor }),
+        };
+        
+        // Handle shadow in update data
+        if (shadow !== null) {
+          updateData.shadow = shadow;
+        } else if (shouldRemoveShadow) {
+          // Explicitly set shadow to null to remove it
+          updateData.shadow = null;
+        }
+        // If shadow is null and not explicitly removing, don't include shadow in updateData
+        
+        console.log('Update data:', updateData);
+        
+        try {
+          selection.set(updateData);
+          canvas?.requestRenderAll();
+          console.log('Selection after update:', selection);
+          console.log('Selection shadow:', selection.shadow);
+        } catch (error) {
+          console.error('Error updating selection:', error);
+          // Try to restore the selection if it was lost
+          if (!selection || !selection.visible) {
+            console.log('Selection was lost, attempting to restore...');
+            // You might need to implement a way to restore the selection
+          }
+        }
       }
 
     });

@@ -24,6 +24,11 @@ interface ITextControlProps {
   colorDisplay: string;
   strokeColor: string;
   strokeColorDisplay: string;
+  shadowColor: string;
+  shadowColorDisplay: string;
+  shadowX: number;
+  shadowY: number;
+  shadowBlur: number;
   fontSize: number;
   fontSizeDisplay: string;
   fontFamily: string;
@@ -48,6 +53,11 @@ const BasicText = ({ item }: { item: ILayer }) => {
     colorDisplay: "#000000",
     strokeColor: "#000000",
     strokeColorDisplay: "#000000",
+    shadowColor: "#000000",
+    shadowColorDisplay: "#000000",
+    shadowX: 0,
+    shadowY: 0,
+    shadowBlur: 0,
     fontSize: 12,
     fontSizeDisplay: "12px",
     fontFamily: "Open Sans",
@@ -95,6 +105,11 @@ const BasicText = ({ item }: { item: ILayer }) => {
       colorDisplay: item.details.color || "#ffffff",
       strokeColor: item.details.strokeColor || "#000000",
       strokeColorDisplay: item.details.strokeColor || "#000000",
+      shadowColor: item.details.shadowColor || "#000000",
+      shadowColorDisplay: item.details.shadowColor || "#000000",
+      shadowX: item.details.shadowX || 0,
+      shadowY: item.details.shadowY || 0,
+      shadowBlur: item.details.shadowBlur || 0,
       fontSize: item.details.fontSize || 62,
       fontSizeDisplay: (item.details.fontSize || 62) + "px",
       fontFamily: selectedFont?.family || "Open Sans",
@@ -126,6 +141,67 @@ const BasicText = ({ item }: { item: ILayer }) => {
       payload: {
         details: {
           strokeColor: strokeColor,
+        },
+      },
+    });
+  };
+
+  // Handler for shadow color change
+  const handleChangeShadowColor = (shadowColor: string) => {
+    console.log('Shadow color changed to:', shadowColor);
+    setProperties({ ...properties, shadowColor, shadowColorDisplay: shadowColor });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          shadowColor: shadowColor,
+          shadowX: properties.shadowX,
+          shadowY: properties.shadowY,
+          shadowBlur: properties.shadowBlur,
+        },
+      },
+    });
+  };
+
+  // Handler for shadow X offset change
+  const handleChangeShadowX = (shadowX: number) => {
+    setProperties({ ...properties, shadowX });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          shadowColor: properties.shadowColor,
+          shadowX: shadowX,
+          shadowY: properties.shadowY,
+          shadowBlur: properties.shadowBlur,
+        },
+      },
+    });
+  };
+
+  // Handler for shadow Y offset change
+  const handleChangeShadowY = (shadowY: number) => {
+    setProperties({ ...properties, shadowY });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          shadowColor: properties.shadowColor,
+          shadowX: properties.shadowX,
+          shadowY: shadowY,
+          shadowBlur: properties.shadowBlur,
+        },
+      },
+    });
+  };
+
+  // Handler for shadow blur change
+  const handleChangeShadowBlur = (shadowBlur: number) => {
+    setProperties({ ...properties, shadowBlur });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          shadowColor: properties.shadowColor,
+          shadowX: properties.shadowX,
+          shadowY: properties.shadowY,
+          shadowBlur: shadowBlur,
         },
       },
     });
@@ -244,7 +320,16 @@ const BasicText = ({ item }: { item: ILayer }) => {
           <div className="text-sm">Style</div>
           <Fill color={properties.color} onColorChange={handleChangeColor} />
           <Stroke strokeColor={properties.strokeColor} onStrokeColorChange={handleChangeStrokeColor} />
-          <Shadow />
+          {/* <Shadow 
+            shadowColor={properties.shadowColor} 
+            onShadowColorChange={handleChangeShadowColor}
+            shadowX={properties.shadowX}
+            onShadowXChange={handleChangeShadowX}
+            shadowY={properties.shadowY}
+            onShadowYChange={handleChangeShadowY}
+            shadowBlur={properties.shadowBlur}
+            onShadowBlurChange={handleChangeShadowBlur}
+          /> */}
           <Background />
         </div>
 
@@ -336,24 +421,109 @@ const Stroke = ({ strokeColor, onStrokeColorChange }: { strokeColor: string; onS
     </div>
   );
 };
-const Shadow = () => {
+const Shadow = ({ 
+  shadowColor, 
+  onShadowColorChange,
+  shadowX,
+  onShadowXChange,
+  shadowY,
+  onShadowYChange,
+  shadowBlur,
+  onShadowBlurChange
+}: { 
+  shadowColor: string; 
+  onShadowColorChange: (shadowColor: string) => void;
+  shadowX: number;
+  onShadowXChange: (shadowX: number) => void;
+  shadowY: number;
+  onShadowYChange: (shadowY: number) => void;
+  shadowBlur: number;
+  onShadowBlurChange: (shadowBlur: number) => void;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 24px 24px",
-        gap: "4px",
-      }}
-    >
-      <div className="text-sm text-zinc-500  flex items-center">Shadow</div>
-      <div>
-        <div className="w-6 h-6 rounded-sm border-2 border-zinc-800 bg-green-700"></div>
+    <div className="flex flex-col gap-2">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 24px 24px",
+          gap: "4px",
+        }}
+      >
+        <div className="text-sm text-zinc-500 flex items-center">Shadow</div>
+        <div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <div 
+                className="w-6 h-6 rounded-sm border-2 border-zinc-800 cursor-pointer"
+                style={{ backgroundColor: shadowColor }}
+              />
+            </PopoverTrigger>
+            <PopoverContent className="z-[300] md:w-[300px] p-3 mr-4">
+              <ColorPicker
+                value={shadowColor}
+                format="hex"
+                gradient={false}
+                solid={true}
+                onChange={onShadowColorChange}
+                allowAddGradientStops={false}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-6 w-6"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <Ellipsis size={14} />
+          </Button>
+        </div>
       </div>
-      <div>
-        <Button size="icon" variant="ghost" className="h-6 w-6">
-          <Ellipsis size={14} />
-        </Button>
-      </div>
+      
+      {isExpanded && (
+        <div className="flex flex-col gap-2 pl-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-400 w-8">X:</span>
+            <Input
+              type="number"
+              value={shadowX || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onShadowXChange(value);
+              }}
+              className="h-6 text-xs"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-400 w-8">Y:</span>
+            <Input
+              type="number"
+              value={shadowY || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onShadowYChange(value);
+              }}
+              className="h-6 text-xs"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-400 w-8">Blur:</span>
+            <Input
+              type="number"
+              value={shadowBlur || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onShadowBlurChange(value);
+              }}
+              className="h-6 text-xs"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
