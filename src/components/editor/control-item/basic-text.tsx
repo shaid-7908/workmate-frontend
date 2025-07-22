@@ -29,6 +29,8 @@ interface ITextControlProps {
   shadowX: number;
   shadowY: number;
   shadowBlur: number;
+  backgroundColor: string;
+  backgroundColorDisplay: string;
   fontSize: number;
   fontSizeDisplay: string;
   fontFamily: string;
@@ -58,6 +60,8 @@ const BasicText = ({ item }: { item: ILayer }) => {
     shadowX: 0,
     shadowY: 0,
     shadowBlur: 0,
+    backgroundColor: "transparent",
+    backgroundColorDisplay: "transparent",
     fontSize: 12,
     fontSizeDisplay: "12px",
     fontFamily: "Open Sans",
@@ -110,6 +114,8 @@ const BasicText = ({ item }: { item: ILayer }) => {
       shadowX: item.details.shadowX || 0,
       shadowY: item.details.shadowY || 0,
       shadowBlur: item.details.shadowBlur || 0,
+      backgroundColor: item.details.backgroundColor || "transparent",
+      backgroundColorDisplay: item.details.backgroundColor || "transparent",
       fontSize: item.details.fontSize || 62,
       fontSizeDisplay: (item.details.fontSize || 62) + "px",
       fontFamily: selectedFont?.family || "Open Sans",
@@ -202,6 +208,18 @@ const BasicText = ({ item }: { item: ILayer }) => {
           shadowX: properties.shadowX,
           shadowY: properties.shadowY,
           shadowBlur: shadowBlur,
+        },
+      },
+    });
+  };
+
+  // Handler for background color change
+  const handleChangeBackgroundColor = (backgroundColor: string) => {
+    setProperties({ ...properties, backgroundColor, backgroundColorDisplay: backgroundColor });
+    dispatcher.dispatch(EDIT_OBJECT, {
+      payload: {
+        details: {
+          backgroundColor: backgroundColor,
         },
       },
     });
@@ -330,7 +348,7 @@ const BasicText = ({ item }: { item: ILayer }) => {
             shadowBlur={properties.shadowBlur}
             onShadowBlurChange={handleChangeShadowBlur}
           /> */}
-          <Background />
+          <Background backgroundColor={properties.backgroundColor} onBackgroundColorChange={handleChangeBackgroundColor} />
         </div>
 
         <div className="p-4">
@@ -527,7 +545,7 @@ const Shadow = ({
     </div>
   );
 };
-const Background = () => {
+const Background = ({ backgroundColor, onBackgroundColorChange }: { backgroundColor: string; onBackgroundColorChange: (backgroundColor: string) => void }) => {
   return (
     <div
       style={{
@@ -536,9 +554,26 @@ const Background = () => {
         gap: "4px",
       }}
     >
-      <div className="text-sm text-zinc-500  flex items-center">Background</div>
+      <div className="text-sm text-zinc-500 flex items-center">Background</div>
       <div>
-        <div className="w-6 h-6 rounded-sm border-2 border-zinc-800 bg-green-700"></div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <div 
+              className="w-6 h-6 rounded-sm border-2 border-zinc-800 cursor-pointer"
+              style={{ backgroundColor: backgroundColor === 'transparent' ? 'transparent' : backgroundColor }}
+            />
+          </PopoverTrigger>
+          <PopoverContent className="z-[300] md:w-[300px] p-3 mr-4">
+            <ColorPicker
+              value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
+              format="hex"
+              gradient={false}
+              solid={true}
+              onChange={onBackgroundColorChange}
+              allowAddGradientStops={false}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       <div>
         <Button size="icon" variant="ghost" className="h-6 w-6">

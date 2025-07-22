@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Store, CheckCircle} from "lucide-react";
+import OrderAnalytics from "@/components/OrderAnaletics";
 
 export const ShopifyConnect = () => {
   const [isConnected, setIsConnected] = useState(true);
@@ -118,6 +119,7 @@ export const ShopifyConnect = () => {
           </CardContent>
         </Card>
       )}
+      <OrderAnalytics />
     </div>
   );
 };

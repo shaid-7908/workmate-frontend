@@ -17,30 +17,35 @@ import { CompetitorInsights } from "./components/CompetitorInsights";
 import { AdStudio } from "./components/AdStudio";
 import { SavedProjects } from "./components/SavedProjects";
 import ImageEditor from "./components/editor/editor";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient();
 
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <TooltipProvider>
-        
-      <BrowserRouter>
-      <Routes>
-        <Route path="/editor" element={<Editor/>}/>
-        <Route path="/image-editor" element={<ImageEditor/>} />
-        <Route path="/dashboard" element={<IndexDashboard/>}>
-          <Route index element={<DashboardOverview/>}/>
-          <Route path="shopify-connect" element={<ShopifyConnect/>} />
-          <Route path="product-explorer" element={<ProductExplorer/>} />
-          <Route path="competitor-insight" element={<CompetitorInsights/>} />
-          <Route path="ad-studio" element={<AdStudio/>}/>
-          <Route path="saved-project" element={<SavedProjects/>} />
-        </Route>
-      </Routes>
-      </BrowserRouter>
-      
-      </TooltipProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient} >
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/editor" element={<Editor />} />
+              <Route path="/image-editor" element={<ImageEditor />} />
+              <Route path="/dashboard" element={<IndexDashboard />}>
+                <Route index element={<DashboardOverview />} />
+                <Route path="shopify-connect" element={<ShopifyConnect />} />
+                <Route path="product-explorer" element={<ProductExplorer />} />
+                <Route
+                  path="competitor-insight"
+                  element={<CompetitorInsights />}
+                />
+                <Route path="ad-studio" element={<AdStudio />} />
+                <Route path="saved-project" element={<SavedProjects />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );
 

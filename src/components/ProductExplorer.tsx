@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Star,  Eye } from "lucide-react";
-
+import { useFetchProduct } from "@/apihooks/useFecthProduct";
 const mockProducts = [
   {
     id: 1,
@@ -51,6 +51,9 @@ const mockProducts = [
 export const ProductExplorer = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const {data}=useFetchProduct()
+  console.log(data,'from backend')
 
   const categories = [
     "All",

@@ -89,7 +89,7 @@ const Canvas = () => {
       if(selection){
         const details = val.payload.details;
         console.log('Edit details:', details);
-        const {fontFamily, fontUrl, textAlign, fontSize, color, strokeColor, shadowColor, shadowX, shadowY, shadowBlur} = details;
+        const {fontFamily, fontUrl, textAlign, fontSize, color, strokeColor, shadowColor, shadowX, shadowY, shadowBlur, backgroundColor} = details;
         
         // Handle shadow properties
         let shadow = null;
@@ -175,6 +175,7 @@ const Canvas = () => {
           ...(fontSize && { fontSize }),
           ...(color && { fill: color }),
           ...(strokeColor && { stroke: strokeColor }),
+          ...(backgroundColor && backgroundColor !== 'transparent' && { backgroundColor }),
         };
         
         // Handle shadow in update data
