@@ -13,7 +13,6 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
   backgroundColor = "#0b0f19",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const vGuideRef = useRef<Line | null>(null);
   const hGuideRef = useRef<Line | null>(null);
@@ -21,7 +20,6 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
   const undoStackRef = useRef<string[]>([]);
   const redoStackRef = useRef<string[]>([]);
   const maxHistory = 50;
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -129,10 +127,26 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
   useEffect(() => {
     const subscription = dispatcher.bus
       .pipe(filter(({ key }) => key === ADD_IMAGE))
-      .subscribe(({ val }) => {
-        const src: string | undefined = val?.payload?.details?.src;
+      .subscribe(async ({ val }) => {
+        let src: string | undefined = val?.payload?.details?.src;
         if (!src) return;
-        FabricImage.fromURL(src).then((img) => {
+
+        // Try to avoid CORS taint by converting to data URL when remote
+        if (/^https?:/i.test(src)) {
+          try {
+            const res = await fetch(src, { mode: "cors" });
+            const blob = await res.blob();
+            src = await new Promise<string>((resolve) => {
+              const fr = new FileReader();
+              fr.onload = () => resolve(String(fr.result));
+              fr.readAsDataURL(blob);
+            });
+          } catch (e) {
+            // Fallback: rely on crossOrigin load. If server has no CORS, export may fail.
+          }
+        }
+
+        FabricImage.fromURL(src, { crossOrigin: "anonymous" as any }).then((img) => {
           const canvas = fabricRef.current;
           if (!canvas || !img) return;
           const maxW = 480;
@@ -177,6 +191,24 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
       isRestoringRef.current = false;
       canvas.requestRenderAll();
     });
+  };
+
+  const handleExportPNG = () => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const originalBg = (canvas as any).backgroundColor;
+    // Force transparent background for export only
+    (canvas as any).backgroundColor = "rgba(0,0,0,0)";
+    const dataUrl = canvas.toDataURL({ format: "png", multiplier: 2 });
+    // Restore UI background
+    (canvas as any).backgroundColor = originalBg;
+    canvas.requestRenderAll();
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `image-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleUndo = () => {
@@ -232,111 +264,40 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const addImageFromFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const url = String(e.target?.result || "");
-      if (!url) return;
-      const img = await FabricImage.fromURL(url);
-      const canvas = fabricRef.current;
-      if (!canvas) return;
-
-      // scale to fit inside 512x512 while keeping aspect ratio
-      const maxW = 480;
-      const maxH = 480;
-      const scaleX = maxW / (img.width || maxW);
-      const scaleY = maxH / (img.height || maxH);
-      const scale = Math.min(scaleX, scaleY, 1);
-      img.set({
-        left: (512 - (img.width || 0) * scale) / 2,
-        top: (512 - (img.height || 0) * scale) / 2,
-        scaleX: scale,
-        scaleY: scale,
-        selectable: true,
-      });
-
-      canvas.add(img);
-      canvas.setActiveObject(img);
-      canvas.requestRenderAll();
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) addImageFromFile(file);
-  };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      setIsDraggingOver(true);
-    };
-
-    const handleDragLeave = (e: DragEvent) => {
-      e.preventDefault();
-      setIsDraggingOver(false);
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      setIsDraggingOver(false);
-      const file = e.dataTransfer?.files?.[0];
-      if (file) addImageFromFile(file);
-    };
-
-    container.addEventListener("dragover", handleDragOver);
-    container.addEventListener("dragleave", handleDragLeave);
-    container.addEventListener("drop", handleDrop);
-
-    return () => {
-      container.removeEventListener("dragover", handleDragOver);
-      container.removeEventListener("dragleave", handleDragLeave);
-      container.removeEventListener("drop", handleDrop);
-    };
-  }, []);
+  // Upload and drag-drop are intentionally disabled here; images come via sidebar using ADD_IMAGE.
 
   return (
-    <div ref={containerRef} className={className}>
-      <div className="mb-2 flex items-center justify-between">
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-gray-300">
-          <input type="file" accept="image/*" onChange={handleFileInput} className="hidden" />
-          <span className="rounded-md border border-gray-800 bg-gray-950/70 px-3 py-1.5 text-gray-200 hover:bg-gray-900">
-            Upload Image
-          </span>
-          <span className="text-gray-500">or drag & drop</span>
-        </label>
-        <div className="flex items-center gap-2">
+    <div className={className}>
+      <div className="relative inline-block">
+        <canvas ref={canvasRef} className="rounded-md ring-1 ring-lime-400/60" />
+        <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-end gap-2 p-2">
           <button
             onClick={handleUndo}
             disabled={!canUndo}
-            className="rounded-md border border-gray-800 bg-gray-950/70 px-3 py-1.5 text-gray-200 disabled:opacity-40 hover:bg-gray-900"
+            className="rounded-md border border-gray-800 bg-gray-950/80 px-3 py-1.5 text-xs text-gray-200 backdrop-blur-sm disabled:opacity-40 hover:bg-gray-900"
           >
             Undo
           </button>
           <button
             onClick={handleRedo}
             disabled={!canRedo}
-            className="rounded-md border border-gray-800 bg-gray-950/70 px-3 py-1.5 text-gray-200 disabled:opacity-40 hover:bg-gray-900"
+            className="rounded-md border border-gray-800 bg-gray-950/80 px-3 py-1.5 text-xs text-gray-200 backdrop-blur-sm disabled:opacity-40 hover:bg-gray-900"
           >
             Redo
           </button>
           <button
+            onClick={handleExportPNG}
+            className="rounded-md border border-gray-800 bg-gray-950/80 px-3 py-1.5 text-xs text-gray-200 backdrop-blur-sm hover:bg-gray-900"
+          >
+            Export PNG
+          </button>
+          <button
             onClick={handleDelete}
-            className="rounded-md border border-gray-800 bg-gray-950/70 px-3 py-1.5 text-gray-200 hover:bg-gray-900"
+            className="rounded-md border border-gray-800 bg-gray-950/80 px-3 py-1.5 text-xs text-gray-200 backdrop-blur-sm hover:bg-gray-900"
           >
             Delete
           </button>
         </div>
-      </div>
-      <div className="relative">
-        <canvas ref={canvasRef} className="rounded-md ring-1 ring-lime-400/60" />
-        {isDraggingOver && (
-          <div className="pointer-events-none absolute inset-0 rounded-md border-2 border-dashed border-lime-400/60 bg-lime-400/10" />
-        )}
       </div>
     </div>
   );
