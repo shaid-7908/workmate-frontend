@@ -18,6 +18,7 @@ import { AdStudio } from "./components/AdStudio";
 import { SavedProjects } from "./components/SavedProjects";
 import ImageEditor from "./components/editor/editor";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AiImageEditor from "./pages/AiImageEditor";
 const queryClient = new QueryClient();
 
 
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")!).render(
             <Routes>
               <Route path="/editor" element={<Editor />} />
               <Route path="/image-editor" element={<ImageEditor />} />
+              <Route path="/ai-image-editor" element={<AiImageEditor />} />
               <Route path="/dashboard" element={<IndexDashboard />}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="shopify-connect" element={<ShopifyConnect />} />

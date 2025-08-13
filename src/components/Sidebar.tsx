@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Home,
   FlipHorizontal2,
+ImagePlus
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -55,6 +56,12 @@ const menuItems = [
     label: "Video Editor",
     id: "editor",
     route: "/editor", // This is outside of /dashboard
+  },
+  {
+    icon: ImagePlus,
+    label: "Image Editor",
+    id: "image-editor",
+    route: "/ai-image-editor",
   },
   // {
   //   icon: Settings,
