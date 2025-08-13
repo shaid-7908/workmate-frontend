@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as fabric from "fabric";
 import { FabricImage } from "fabric";
+import { ADD_IMAGE, dispatcher, filter } from "@/global";
 
 interface EditorCanvas512Props {
   className?: string;
@@ -34,6 +35,36 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
       fabricRef.current = null;
     };
   }, [backgroundColor]);
+
+  // Listen to global ADD_IMAGE bus to add into this canvas
+  useEffect(() => {
+    const subscription = dispatcher.bus
+      .pipe(filter(({ key }) => key === ADD_IMAGE))
+      .subscribe(({ val }) => {
+        const src: string | undefined = val?.payload?.details?.src;
+        if (!src) return;
+        FabricImage.fromURL(src).then((img) => {
+          const canvas = fabricRef.current;
+          if (!canvas || !img) return;
+          const maxW = 480;
+          const maxH = 480;
+          const scaleX = maxW / (img.width || maxW);
+          const scaleY = maxH / (img.height || maxH);
+          const scale = Math.min(scaleX, scaleY, 1);
+          img.set({
+            left: (512 - (img.width || 0) * scale) / 2,
+            top: (512 - (img.height || 0) * scale) / 2,
+            scaleX: scale,
+            scaleY: scale,
+            selectable: true,
+          });
+          canvas.add(img);
+          canvas.setActiveObject(img);
+          canvas.requestRenderAll();
+        });
+      });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const addImageFromFile = (file: File) => {
     const reader = new FileReader();

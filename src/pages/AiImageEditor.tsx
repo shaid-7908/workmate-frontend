@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import AiImageSidebar, { AiImageTool } from "@/components/AiImageSidebar";
 import EditorCanvas512 from "@/components/ai-image/EditorCanvas512";
 import PreviewBox from "@/components/ai-image/PreviewBox";
+import AiProductPanel from "@/components/ai-image/AiProductPanel";
 
 const AiImageEditor = () => {
   const [activeTab, setActiveTab] = useState("image-editor");
@@ -134,24 +135,15 @@ const AiImageEditor = () => {
             {activeTool === "products" && (
               <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900/60 p-4 shadow-lg">
                 <h2 className="text-lg font-semibold text-gray-100">Add Products</h2>
-                <div className="mt-3">
-                  <button className="w-full rounded-md border border-dashed border-gray-700 bg-gray-950/40 p-3 text-sm text-gray-300 hover:bg-gray-900/60">
-                    Upload Product Photo
-                  </button>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                  ))}
-                </div>
+                <AiProductPanel />
               </div>
             )}
 
             {/* Canvas area */}
             <div className="flex min-h-[560px] flex-1 flex-col gap-4 rounded-xl border border-gray-800 bg-gray-900/40 p-4 shadow-lg">
-              <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="">
                 <EditorCanvas512 className="flex items-start justify-center" />
-                <PreviewBox label="Generated preview will appear here" />
+                
               </div>
               <div className="flex items-center gap-2 self-end">
                 <button className="inline-flex items-center gap-2 rounded-md border border-gray-800 bg-gray-950/70 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-900">
