@@ -275,6 +275,17 @@ const EditorCanvas512 = forwardRef<EditorCanvas512Handle, EditorCanvas512Props>(
   // Delete key support
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Don't handle keyboard shortcuts if user is typing in an input field
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || 
+                          target.tagName === 'TEXTAREA' || 
+                          target.contentEditable === 'true' ||
+                          target.getAttribute('role') === 'textbox';
+      
+      if (isInputField) {
+        return; // Let the input field handle the event normally
+      }
+
       if (e.key === "Delete" || e.key === "Backspace") {
         handleDelete();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {

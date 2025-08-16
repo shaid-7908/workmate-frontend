@@ -7,6 +7,7 @@ import EditorCanvas512, { EditorCanvas512Handle } from "@/components/ai-image/Ed
 import PreviewBox from "@/components/ai-image/PreviewBox";
 import AiProductPanel from "@/components/ai-image/AiProductPanel";
 import axiosInstance from "@/api/axios.instance";
+import { PRODUCT_SCENE } from "@/data/product_scene";
 
 const AiImageEditor = () => {
   const [activeTab, setActiveTab] = useState("image-editor");
@@ -16,6 +17,7 @@ const AiImageEditor = () => {
   });
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<typeof PRODUCT_SCENE[0] | null>(null);
   const canvasRef = useRef<EditorCanvas512Handle | null>(null);
 
   const handleToggle = () => {
@@ -44,6 +46,19 @@ const AiImageEditor = () => {
         return description;
       });
     }
+  };
+
+  const handleTemplateSelect = (template: typeof PRODUCT_SCENE[0]) => {
+    setSelectedTemplate(template);
+    
+    setPrompt(prevPrompt => {
+      // If there's existing content, wrap it with the template's prefix and suffix
+      if (prevPrompt.trim()) {
+        return `${template.prefix} ${prevPrompt.trim()} ${template.suffix}`;
+      }
+      // If no existing content, use placeholder
+      return `${template.prefix} [product] ${template.suffix}`;
+    });
   };
 
   const handleGenerate = async () => {
@@ -103,7 +118,15 @@ const AiImageEditor = () => {
             {/* Left panel switches by active tool */}
             {activeTool === "generate" && (
               <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900/60 p-4 shadow-lg">
-                <h2 className="text-lg font-semibold text-gray-100">Generate Photoshoot</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-100">Generate Photoshoot</h2>
+                  {selectedTemplate && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-lime-400 rounded-full"></div>
+                      <span className="text-xs text-lime-400 font-medium">{selectedTemplate.name}</span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="mt-4 space-y-3">
                   <textarea
@@ -156,19 +179,45 @@ const AiImageEditor = () => {
 
                   <div className="mt-4 space-y-3">
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-gray-400">Merchandise</div>
+                      <div className="text-xs uppercase tracking-wide text-gray-400">Product Scenes</div>
                       <div className="mt-2 grid grid-cols-3 gap-2">
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase tracking-wide text-gray-400">Clean</div>
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
-                        <div className="h-24 rounded-md bg-gray-800/40 ring-1 ring-gray-800" />
+                        {PRODUCT_SCENE.map((scene) => {
+                          const isSelected = selectedTemplate?.id === scene.id;
+                          return (
+                            <div
+                              key={scene.id}
+                              className={`group relative h-24 overflow-hidden rounded-md bg-gray-800/40 cursor-pointer transition-all ${
+                                isSelected 
+                                  ? 'ring-2 ring-lime-400 bg-lime-400/10' 
+                                  : 'ring-1 ring-gray-800 hover:ring-2 hover:ring-lime-400/50'
+                              }`}
+                              onClick={() => handleTemplateSelect(scene)}
+                              title={scene.name}
+                            >
+                              <img
+                                src={scene.src}
+                                alt={scene.name}
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                crossOrigin="anonymous"
+                              />
+                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                              {isSelected && (
+                                <div className="absolute top-1 right-1">
+                                  <div className="w-3 h-3 bg-lime-400 rounded-full border-2 border-white shadow-md"></div>
+                                </div>
+                              )}
+                              <div className="absolute bottom-1 left-1 right-1">
+                                <div className={`text-xs rounded px-1 py-0.5 backdrop-blur-sm truncate ${
+                                  isSelected 
+                                    ? 'text-white bg-lime-400/80 font-medium' 
+                                    : 'text-white bg-black/50'
+                                }`}>
+                                  {scene.name}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
