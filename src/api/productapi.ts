@@ -20,3 +20,8 @@ export async function FetchTotalOrders():Promise<any>{
     const response = await axiosInstance.get('/shopify/total_orders')
     return response
 }
+
+export async function GenerateAiImage(payload: { image_base64: string; prompt?: string }): Promise<any> {
+    const response = await axiosInstance.post('/api/ai/generate', payload)
+    return response.data
+}

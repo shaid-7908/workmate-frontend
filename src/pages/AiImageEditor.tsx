@@ -1,11 +1,12 @@
 //A basic recat page for the ai image editor
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import AiImageSidebar, { AiImageTool } from "@/components/AiImageSidebar";
-import EditorCanvas512 from "@/components/ai-image/EditorCanvas512";
+import EditorCanvas512, { EditorCanvas512Handle } from "@/components/ai-image/EditorCanvas512";
 import PreviewBox from "@/components/ai-image/PreviewBox";
 import AiProductPanel from "@/components/ai-image/AiProductPanel";
+import axiosInstance from "@/api/axios.instance";
 
 const AiImageEditor = () => {
   const [activeTab, setActiveTab] = useState("image-editor");
@@ -13,6 +14,9 @@ const AiImageEditor = () => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return window.innerWidth < 1024;
   });
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const canvasRef = useRef<EditorCanvas512Handle | null>(null);
 
   const handleToggle = () => {
     setIsCollapsed(!isCollapsed);
@@ -28,6 +32,27 @@ const AiImageEditor = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isCollapsed]);
+
+  const handleGenerate = async () => {
+    try {
+      setIsGenerating(true);
+      const base64 = canvasRef.current?.exportBase64PNG({ transparent: true, multiplier: 2 });
+      if (!base64) {
+        console.warn("No canvas data to send");
+        return;
+      }
+      const payload = {
+        image_base64: base64,
+        prompt: prompt || undefined,
+      };
+      await axiosInstance.post("/api/ai/generate", payload);
+      // You can handle response and update UI as needed
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="dark min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -69,11 +94,17 @@ const AiImageEditor = () => {
 
                 <div className="mt-4 space-y-3">
                   <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
                     className="h-20 w-full resize-none rounded-md border border-gray-800 bg-gray-950/60 p-3 text-gray-100 placeholder-gray-400 outline-none focus:border-purple-600"
                     placeholder="a yellow container with cherries, in front of a golden brown and yellow background"
                   />
-                  <button className="w-full rounded-md bg-lime-400 px-4 py-2 font-semibold text-gray-900 transition hover:bg-lime-300">
-                    Generate
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                    className="w-full rounded-md bg-lime-400 px-4 py-2 font-semibold text-gray-900 transition hover:bg-lime-300 disabled:opacity-60"
+                  >
+                    {isGenerating ? "Generating..." : "Generate"}
                   </button>
 
                   <div className="flex items-center justify-between">
@@ -142,7 +173,7 @@ const AiImageEditor = () => {
             {/* Canvas area */}
             <div className="flex min-h-[560px] flex-1 flex-col gap-4 rounded-xl border border-gray-800 bg-gray-900/40 p-4 shadow-lg">
               <div className="">
-                <EditorCanvas512 className="flex items-start justify-center" />
+                <EditorCanvas512 ref={canvasRef} className="flex items-start justify-center" />
                 
               </div>
               <div className="flex items-center gap-2 self-end">

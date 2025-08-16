@@ -1,17 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
 import * as fabric from "fabric";
 import { FabricImage, Line } from "fabric";
 import { ADD_IMAGE, HISTORY_REDO, HISTORY_UNDO, dispatcher, filter } from "@/global";
+import { GetImageProxy } from "@/api/imageapi";
+
+export interface EditorCanvas512Handle {
+  exportBase64PNG: (options?: { multiplier?: number; transparent?: boolean }) => string | null;
+}
 
 interface EditorCanvas512Props {
   className?: string;
   backgroundColor?: string;
 }
 
-const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
-  className,
-  backgroundColor = "#0b0f19",
-}) => {
+const EditorCanvas512 = forwardRef<EditorCanvas512Handle, EditorCanvas512Props>(({ className, backgroundColor = "#0b0f19" }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const vGuideRef = useRef<Line | null>(null);
@@ -142,7 +144,19 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
               fr.readAsDataURL(blob);
             });
           } catch (e) {
-            // Fallback: rely on crossOrigin load. If server has no CORS, export may fail.
+            console.warn("Direct fetch failed due to CORS, trying proxy...", e);
+            // Try using backend proxy for CORS-blocked images
+            try {
+              const blob = await GetImageProxy(src);
+              src = await new Promise<string>((resolve) => {
+                const fr = new FileReader();
+                fr.onload = () => resolve(String(fr.result));
+                fr.readAsDataURL(blob);
+              });
+            } catch (proxyError) {
+              console.error("Proxy fetch also failed:", proxyError);
+              // Last fallback: try direct load with crossOrigin (may not work for canvas export)
+            }
           }
         }
 
@@ -193,16 +207,26 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
     });
   };
 
-  const handleExportPNG = () => {
+  const exportBase64PNGInternal = (options?: { multiplier?: number; transparent?: boolean }): string | null => {
     const canvas = fabricRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
     const originalBg = (canvas as any).backgroundColor;
-    // Force transparent background for export only
-    (canvas as any).backgroundColor = "rgba(0,0,0,0)";
-    const dataUrl = canvas.toDataURL({ format: "png", multiplier: 2 });
-    // Restore UI background
+    if (options?.transparent) {
+      (canvas as any).backgroundColor = "rgba(0,0,0,0)";
+    }
+    const dataUrl = canvas.toDataURL({ format: "png", multiplier: options?.multiplier ?? 2 });
     (canvas as any).backgroundColor = originalBg;
     canvas.requestRenderAll();
+    return dataUrl;
+  };
+
+  useImperativeHandle(ref, () => ({
+    exportBase64PNG: (options) => exportBase64PNGInternal(options),
+  }), []);
+
+  const handleExportPNG = () => {
+    const dataUrl = exportBase64PNGInternal({ multiplier: 2, transparent: true });
+    if (!dataUrl) return;
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = `image-${Date.now()}.png`;
@@ -301,7 +325,9 @@ const EditorCanvas512: React.FC<EditorCanvas512Props> = ({
       </div>
     </div>
   );
-};
+});
+
+EditorCanvas512.displayName = "EditorCanvas512";
 
 export default EditorCanvas512;
 
