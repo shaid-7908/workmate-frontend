@@ -17,9 +17,10 @@ import axiosInstance from "@/api/axios.instance";
 
 interface AiProductPanelProps {
   className?: string;
+  onImageSelect?: (imageUrl: string, description?: string) => void;
 }
 
-const AiProductPanel: React.FC<AiProductPanelProps> = ({ className }) => {
+const AiProductPanel: React.FC<AiProductPanelProps> = ({ className, onImageSelect }) => {
   const { data: uploadedImages, isLoading, refetch } = useGetUploadedImages();
   const invalidateUploadedImages = useInvalidateUploadedImages();
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
@@ -31,8 +32,8 @@ const AiProductPanel: React.FC<AiProductPanelProps> = ({ className }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showTransition, setShowTransition] = useState(false);
-  console.log(uploadedImages);
-  const handleAddByUrl = (src: string) => {
+
+  const handleAddByUrl = (src: string, description?: string) => {
     dispatcher?.dispatch(ADD_IMAGE, {
       payload: {
         id: nanoid(),
@@ -42,6 +43,11 @@ const AiProductPanel: React.FC<AiProductPanelProps> = ({ className }) => {
       },
       options: {},
     });
+    
+    // Call the callback to update the generate photoshoot prompt
+    if (onImageSelect) {
+      onImageSelect(src, description);
+    }
   };
 
 
@@ -294,7 +300,7 @@ const AiProductPanel: React.FC<AiProductPanelProps> = ({ className }) => {
           <div
             key={img.id}
             className="group relative h-24 overflow-hidden rounded-md bg-gray-800/40 ring-1 ring-gray-800"
-            onClick={() => handleAddByUrl(img.fileUrl as string)}
+            onClick={() => handleAddByUrl(img.fileUrl as string, img.description)}
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData("text/plain", img.fileUrl);

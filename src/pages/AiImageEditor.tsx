@@ -33,6 +33,19 @@ const AiImageEditor = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isCollapsed]);
 
+  const handleImageSelect = (imageUrl: string, description?: string) => {
+    if (description) {
+      // If there's already content in the prompt, append the description
+      // Otherwise, set it as the new prompt
+      setPrompt(prevPrompt => {
+        if (prevPrompt.trim()) {
+          return `${prevPrompt.trim()}, ${description}`;
+        }
+        return description;
+      });
+    }
+  };
+
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
@@ -166,7 +179,7 @@ const AiImageEditor = () => {
             {activeTool === "products" && (
               <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900/60 p-4 shadow-lg">
                 <h2 className="text-lg font-semibold text-gray-100">Add Products</h2>
-                <AiProductPanel />
+                <AiProductPanel onImageSelect={handleImageSelect} />
               </div>
             )}
 
