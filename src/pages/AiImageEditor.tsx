@@ -18,6 +18,8 @@ const AiImageEditor = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<typeof PRODUCT_SCENE[0] | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const canvasRef = useRef<EditorCanvas512Handle | null>(null);
 
   const handleToggle = () => {
@@ -64,19 +66,30 @@ const AiImageEditor = () => {
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
+      setGeneratedImage(null); // Reset previous image
+      setShowModal(true); // Show modal immediately with loading state
+      
       const base64 = canvasRef.current?.exportBase64PNG({ transparent: true, multiplier: 2 });
       if (!base64) {
         console.warn("No canvas data to send");
+        setShowModal(false);
         return;
       }
       const payload = {
-        image_base64: base64,
+        base64_image: base64,
         prompt: prompt || undefined,
+        image_link: selectedTemplate?.src || 'https://ik.imagekit.io/wombo/images/img1.jpg'
       };
-      await axiosInstance.post("/api/ai/generate", payload);
-      // You can handle response and update UI as needed
+      const response = await axiosInstance.post("/api/v1/image-generation/generate", payload);
+      console.log(response.data);
+      
+      // Handle successful response - update modal with generated image
+      if (response.data.generated_image) {
+        setGeneratedImage(`data:image/png;base64,${response.data.generated_image}`);
+      }
     } catch (err) {
       console.error(err);
+      setShowModal(false); // Close modal on error
     } finally {
       setIsGenerating(false);
     }
@@ -250,6 +263,78 @@ const AiImageEditor = () => {
           </div>
         </div>
       </div>
+      
+      {/* Generated Image Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="relative flex h-[80vh] w-[80vw] max-w-4xl flex-col rounded-xl border border-gray-700 bg-gray-900 p-6 shadow-2xl">
+            {/* Modal Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-100">
+                {generatedImage ? "Generated Image" : "Generating Image..."}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Content Area */}
+            <div className="mb-4 flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-gray-800/30">
+              {generatedImage ? (
+                /* Generated Image */
+                <img
+                  src={generatedImage}
+                  alt="Generated result"
+                  className="max-h-full max-w-full rounded-lg object-contain"
+                />
+              ) : (
+                /* Loading State */
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <div className="h-16 w-16 animate-spin rounded-full border-4 border-gray-600 border-t-lime-400"></div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-gray-200">Generating your image...</p>
+                    <p className="text-sm text-gray-400">This may take a few moments</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="rounded-md border border-gray-700 bg-gray-800 px-4 py-2 text-gray-200 transition-colors hover:bg-gray-700"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  if (generatedImage) {
+                    // Create download link for the image
+                    const link = document.createElement('a');
+                    link.href = generatedImage;
+                    link.download = 'generated-image.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                }}
+                disabled={!generatedImage}
+                className="rounded-md bg-lime-400 px-4 py-2 font-semibold text-gray-900 transition-colors hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
